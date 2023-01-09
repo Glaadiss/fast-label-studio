@@ -5,7 +5,7 @@ from typing import List, Tuple
 import numpy as np
 import PIL.Image
 import requests
-from fastai.vision.all import *
+from fastai.vision.all import Image, L, Learner, SaveModelCallback, shutil, tensor
 from label_studio_ml.model import LabelStudioMLBase
 
 from fast_label_studio import brush
@@ -58,7 +58,7 @@ class SegmentationModel(LabelStudioMLBase):
             p = task["data"]["image"]
             images.append(self.read_img(p))
 
-        test_dl = model.dls.test_dl(images)
+        test_dl = model.dls.test_dl(images, num_workers=0)
         preds = model.get_preds(dl=test_dl)
         results = []
         for pred in preds[0]:
@@ -128,9 +128,9 @@ class SegmentationModel(LabelStudioMLBase):
                 else:
                     layers[name] = m
 
-            for l in layers.keys():
-                id = self.labels.index(l)
-                final_mask[layers[l] > 0] = (id) * 1
+            for layer in layers.keys():
+                id = self.labels.index(layer)
+                final_mask[layers[layer] > 0] = (id) * 1
 
             img = Image.fromarray(final_mask)
             img = img.convert("L")
